@@ -6,9 +6,9 @@ import urllib, urllib2
 import hashlib
 
 
-tradingApiUrl = 'https://poloniex.com/tradingApi'
-publicApiUrl  = 'https://poloniex.com/public?'
-BTCRateApi    = 'https://blockchain.info/ticker'
+tradingApiUrl = 'http://poloniex.com/tradingApi'
+publicApiUrl  = 'http://poloniex.com/public?'
+rateApiUrl    = 'http://blockchain.info/ticker'
 
 # PUBLIC API
 # https://poloniex.com/public?command=returnTicker
@@ -22,9 +22,9 @@ BTCRateApi    = 'https://blockchain.info/ticker'
 
 class publicTrading:
 
-    def __init__(self, apiUrl, exchangeUrl):
+    def __init__(self, apiUrl, rateUrl):
         self.base_url = apiUrl
-        self.rate_url = exchangeUrl
+        self.rate_url = rateUrl
 
     def getBTCRate(self):
         url=self.rate_url
@@ -33,61 +33,124 @@ class publicTrading:
         tickers = req.json()
         return float(tickers['USD']['last'])
 	
-    def returnTicker(self, x):
-        url = self.base_url+'command=returnTicker'
-        res={}
-        req = requests.post(url)
+    def returnTickerData(self, tickers):
+        res=[]
+        url = self.base_url
+        data = {'command': 'returnTicker'}
+
+        req = requests.get(url, params=data)
+
         print "Status: %d" % req.status_code
-        tickers = req.json()    
+
+        tickerData = req.json() 
+  
         rate = self.getBTCRate()
 
-        for pair in sorted(tickers):
-            if "BTC_" in pair:
-                ticker = pair.split("_")[1]
-                if ticker in x:
-                    price = float(tickers[pair]['last'])*rate
-                    change = float(tickers[pair]['percentChange']) * 100
-                    volume = float(tickers[pair]['baseVolume'])
-                    res[ticker] = {'price': price, 'change': change, 'volume': volume}            
+        for tickerPair in sorted(tickerData):
+            if "BTC_" in tickerPair: # Values against BTC only?
+                ticker1, ticker2 = tickerPair.split("_")
+                if ticker2 in tickers: # is it in the list passed? 
+                    price = float(tickerData[tickerPair]['last'])*rate
+                    change = float(tickerData[tickerPair]['percentChange']) * 100
+                    volume = float(tickerData[tickerPair]['baseVolume'])
+                    res.append( {ticker2: {'price': price, 'volume': volume, 'change': change}} )
         return res
-	                # create object from dict tickers[ticker]
 
-    
-    def return24hVol(self):
-        url = self.base_url+'command=return24hVolume'
-        req = requests.post(url)
+    def return24hVol(self, tickers):
+        res=[]
+        url = self.base_url
+        data = {'command': 'return24hVolume'}
+
+        req = requests.get(url, params=data)
+
         print "Status: %d" % req.status_code
-        tickers = req.json()
-        for ticker in sorted(tickers):
-            if "BTC_" in ticker:
-                first, second = ticker.split('_')
-                secondVolume = float(tickers[ticker][second])
-                print "%s Vol: %f" % (second, secondVolume)
 
-    def returnOrderBook(self, pair, depth):
-        payload = {'curencyPair': pair, 'depth': depth}
-        url = self.base_url+'returnOrderBook'
-        req = requests.post(url, data=payload)
+        tickerData = req.json()
 
-    def returnTradeHist(self, pair, start, end):
-        payload = {'curencyPair': pair, 'start': start, 'end': end}
-        url = self.base_url+'command=returnTradeHistory'
-        req = requests.post(url, data=payload)
+        for tickerPair in sorted(tickerData):
+            if "BTC_" in tickerPair:
+				ticker1, ticker2 = tickerPair.split("_")
+				if ticker2 in tickers:
+					ticker2Volume = float(tickerData[tickerPair][ticker2])
+					res.append({ticker2: {'volume': ticker2Volume}})
+        return res
 
-    def returnChartData(self, pair, start, end, period):
-        payload = {'curencyPair': pair, 'start': start, 'end': end, 'period': period}
-        url = self.base_url+'command=returnChartData'
-	print url
-        requests.post(url, data=payload)
+    def returnOrderBook(self, ticker, depth):
+        res=[]
+        url = self.base_url
+        pair = "BTC_"+ticker
+
+        #if ticker == 'all'
+        #    data = {'command':'returnOrderBook', 'currencyPair': 'all', 'depth': depth}
+        #else:
+        #    data = {'command':'returnOrderBook', 'currencyPair': pair, 'depth': depth}
+
+        data = {'command':'returnOrderBook', 'currencyPair': pair, 'depth': depth}
+
+        req = requests.get(url, params=data)
+
+        print "Status: %d" % req.status_code
+
+        orders = req.json()
+
+        bids = orders['bids']
+        asks = orders['asks']
+        frozen = orders['isFrozen']
+
+        return orders
+		
+
+    def returnTradeHist(self, ticker, start=0, end=0):
+        res=[]
+        url = self.base_url
+        pair = "BTC_"+ticker
+        #data = {'command':'returnTradeHistory', 'currencyPair': pair, 'start': start, 'end': end}
+        data = {'command':'returnTradeHistory', 'currencyPair': pair}
+
+        req = requests.get(url, params=data)
+
+        print "Status: %d" % req.status_code
+
+        trades = req.json()
+    
+        for trade in trades:
+            amount = trade['amount']
+            ttype   = trade['type']
+        
+            res.append({'amount': amount, 'type': ttype})
+
+        return res
+
+    def returnChartData(self, ticker, start=0, end=0, period=0):
+        res=[]
+        url = self.base_url
+        pair = "BTC_"+ticker
+        data = {'command':'returnChartData', 'currencyPair': pair}
+        #data = {'command':'returnChartData', 'curencyPair': pair, 'start': start, 'end': end, 'period': period}
+        req = requests.get(url, params=data)
+
+        print "Status: %d" % req.status_code
+
+        chartData = req.json()
+
+        print chartData
+        return chartData
+            
 
     def returnCurrencies(self):
-        url = self.base_url+'command=returnCurrencies'
-        req = requests.post(url, data=payload)
+        res=[]
+        url = self.base_url
+        data = {'command':'returnCurrencies'}
 
-    def returnLoanOrders(self, currency):
-	    payload = {'currency': currency}
-	    url = self.base_url+'command=returnLoanOrders'
-	    req = requests.post(url, data=payload)
+        req = requests.get(url, params=data)
+
+        print "Status: %d" % req.status_code
+
+        currencies = req.json()
+
+        print currencies
+
+        return currencies
 
 class privateTrading(publicTrading):
     def __init__(self, apiUrl, exchangeUrl, tradingUrl):
@@ -155,25 +218,30 @@ class privateTrading(publicTrading):
 	#         print "%s %f"% (ticker, float(tickers[ticker]))
  
 
-#p = publicTrading(publicApiUrl, BTCRateApi)
-pv = privateTrading(publicApiUrl, BTCRateApi, tradingApiUrl)
-pv.setKey('')
-pv.setSecret('')
+p = publicTrading(publicApiUrl, rateApiUrl)
+#pv = privateTrading(publicApiUrl, rateApiUrl, tradingApiUrl)
+#pv.setKey('')
+#pv.setSecret('')
 
-balances = pv.returnBalances()
-tickers =  pv.returnTicker(balances.keys())
+#balances = pv.returnBalances()
+tickers =  p.returnTickerData(['LTC', 'ETH', 'NXT'])
+tickers =  p.return24hVol(['LTC', 'ETH', 'NXT'])
+tickers = p.returnOrderBook('ETH', 1)
+tickers = p.returnTradeHist('ETH',0 ,0)
+tickers= p.returnChartData('ETH', 0 , 0)
+tickers = p.returnCurrencies()
 
-for ticker in tickers:
-    change = tickers[ticker]['change']
-    print "%s %0.2f" % (ticker, change), 
-    if change < -5:
-        print "Buy!"
-        #pv.buy(ticker, amount)
-    elif change > 5:
-        print "Sell!"
-        #pv.sell(ticker, amount)
-    else:
-        print "Hold!"
+#for ticker in tickers:
+#    change = tickers[ticker]['change']
+#    print "%s %0.2f" % (ticker, change), 
+#    if change < -5:
+#        print "Buy!"
+#        #pv.buy(ticker, amount)
+#    elif change > 5:
+#        print "Sell!"
+#        #pv.sell(ticker, amount)
+#    else:
+#        print "Hold!"
          
     
 
