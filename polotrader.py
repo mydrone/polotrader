@@ -6,9 +6,9 @@ import urllib, urllib2
 import hashlib
 
 
-tradingApiUrl = 'http://poloniex.com/tradingApi'
-publicApiUrl  = 'http://poloniex.com/public?'
-rateApiUrl    = 'http://blockchain.info/ticker'
+tradingApiUrl = 'https://poloniex.com/tradingApi'
+publicApiUrl  = 'https://poloniex.com/public?'
+rateApiUrl    = 'https://blockchain.info/ticker'
 
 # PUBLIC API
 # https://poloniex.com/public?command=returnTicker
