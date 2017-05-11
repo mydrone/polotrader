@@ -27,18 +27,16 @@ class publicTrading:
         self.rate_url = rateUrl
 
     def getBTCRate(self):
-        url=self.rate_url
-        req = requests.post(url)
+        req = requests.post(self.rate_url)
         print "Status: %d" % req.status_code
         tickers = req.json()
         return float(tickers['USD']['last'])
 	
     def returnTickerData(self, tickers):
         res=[]
-        url = self.base_url
         data = {'command': 'returnTicker'}
 
-        req = requests.get(url, params=data)
+        req = requests.get(self.base_url, params=data)
 
         print "Status: %d" % req.status_code
 
@@ -58,10 +56,9 @@ class publicTrading:
 
     def return24hVol(self, tickers):
         res=[]
-        url = self.base_url
         data = {'command': 'return24hVolume'}
 
-        req = requests.get(url, params=data)
+        req = requests.get(self.base_url, params=data)
 
         print "Status: %d" % req.status_code
 
@@ -77,7 +74,6 @@ class publicTrading:
 
     def returnOrderBook(self, ticker, depth):
         res=[]
-        url = self.base_url
         pair = "BTC_"+ticker
 
         #if ticker == 'all'
@@ -87,7 +83,7 @@ class publicTrading:
 
         data = {'command':'returnOrderBook', 'currencyPair': pair, 'depth': depth}
 
-        req = requests.get(url, params=data)
+        req = requests.get(self.base_url, params=data)
 
         print "Status: %d" % req.status_code
 
@@ -102,12 +98,11 @@ class publicTrading:
 
     def returnTradeHist(self, ticker, start=0, end=0):
         res=[]
-        url = self.base_url
         pair = "BTC_"+ticker
         #data = {'command':'returnTradeHistory', 'currencyPair': pair, 'start': start, 'end': end}
         data = {'command':'returnTradeHistory', 'currencyPair': pair}
 
-        req = requests.get(url, params=data)
+        req = requests.get(self.base_url, params=data)
 
         print "Status: %d" % req.status_code
 
@@ -123,11 +118,10 @@ class publicTrading:
 
     def returnChartData(self, ticker, start=0, end=0, period=0):
         res=[]
-        url = self.base_url
         pair = "BTC_"+ticker
         data = {'command':'returnChartData', 'currencyPair': pair}
         #data = {'command':'returnChartData', 'curencyPair': pair, 'start': start, 'end': end, 'period': period}
-        req = requests.get(url, params=data)
+        req = requests.get(self.base_url, params=data)
 
         print "Status: %d" % req.status_code
 
@@ -139,10 +133,9 @@ class publicTrading:
 
     def returnCurrencies(self):
         res=[]
-        url = self.base_url
         data = {'command':'returnCurrencies'}
 
-        req = requests.get(url, params=data)
+        req = requests.get(self.base_url, params=data)
 
         print "Status: %d" % req.status_code
 
@@ -182,7 +175,6 @@ class privateTrading(publicTrading):
         return self.nonce
 
     def returnBalances(self):
-        url = self.trade_url
         key = self.getKey()
         secret = self.getSecret()
         nonce = self.getNonce()
@@ -198,7 +190,7 @@ class privateTrading(publicTrading):
 
         headers = {'Sign': sign, 'Key': key}
 
-        req = requests.post(url, data=dict_data, headers=headers)
+        req = requests.post(self.trade_url, data=dict_data, headers=headers)
 
         print "Status: %d" % req.status_code
         
