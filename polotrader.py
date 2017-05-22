@@ -25,7 +25,15 @@ class publicTrading:
     def __init__(self, apiUrl, rateUrl):
         self.base_url = apiUrl
         self.rate_url = rateUrl
-
+	
+   def sendPost(data, headers):
+   	req = requests.post(self.base_url, data=data, headers=headers)
+	return req.json()
+	
+   def sendGet(data, headers):
+   	req = requests.get(self.base_url, params=data, headers=headers)
+	return req.json()
+	
     def getBTCRate(self):
         req = requests.post(self.rate_url)
         print "Status: %d" % req.status_code
