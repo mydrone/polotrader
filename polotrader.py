@@ -224,12 +224,15 @@ p = publicTrading(publicApiUrl, rateApiUrl)
 #pv.setSecret('')
 
 #balances = pv.returnBalances()
-tickers =  p.returnTickerData(['LTC', 'ETH', 'NXT'])
+tickers =  p.returnTickerData(['LTC', 'ETH', 'NXT']) #
 tickers =  p.return24hVol(['LTC', 'ETH', 'NXT'])
 tickers = p.returnOrderBook('ETH', 1)
 tickers = p.returnTradeHist('ETH',0 ,0)
 tickers= p.returnChartData('ETH', 0 , 0)
-tickers = p.returnCurrencies()
+tickers = p.returnCurrencies()                    #Traceback (most recent call last):
+                                                  #File "/home/qqq/PycharmProjects/untitled/4.py", line 253, in <module>
+                                                  # tickers = p.returnCurrencies()
+                                                 #AttributeError: 'publicTrading' object has no attribute 'returnCurrencies'
 
 #for ticker in tickers:
 #    change = tickers[ticker]['change']
